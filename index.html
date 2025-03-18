@@ -1,80 +1,110 @@
 <!DOCTYPE html>
-<html>
+<html lang="es">
 <head>
-  <meta charset="utf-8" />
-  <title>Mi Chat con n8n</title>
-  <style>
-    /* Estilos muy básicos */
-    body { font-family: Arial, sans-serif; margin: 20px; }
-    #chatContainer { max-width: 600px; margin: 0 auto; }
-    #messages { border: 1px solid #ccc; padding: 10px; height: 300px; overflow-y: scroll; }
-    .msg { margin-bottom: 8px; }
-    .user { font-weight: bold; color: #0084ff; }
-    .bot { font-weight: bold; color: #f23c50; }
-  </style>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Chat con n8n</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            background-color: #f4f4f4;
+            text-align: center;
+            margin: 20px;
+        }
+        #chatContainer {
+            width: 400px;
+            margin: auto;
+            background: white;
+            padding: 20px;
+            border-radius: 10px;
+            box-shadow: 0 0 10px rgba(0, 0, 0, 0.1);
+        }
+        #messages {
+            border: 1px solid #ccc;
+            padding: 10px;
+            height: 300px;
+            overflow-y: scroll;
+            background: #fff;
+            text-align: left;
+        }
+        .msg {
+            margin-bottom: 10px;
+            padding: 8px;
+            border-radius: 5px;
+        }
+        .user { background-color: #0084ff; color: white; text-align: right; }
+        .bot { background-color: #f23c50; color: white; text-align: left; }
+        input {
+            width: 80%;
+            padding: 10px;
+            margin-top: 10px;
+            border: 1px solid #ccc;
+            border-radius: 5px;
+        }
+        button {
+            padding: 10px 15px;
+            background-color: #28a745;
+            color: white;
+            border: none;
+            border-radius: 5px;
+            cursor: pointer;
+        }
+        button:hover {
+            background-color: #218838;
+        }
+    </style>
 </head>
 <body>
-  <div id="chatContainer">
-    <h2>Chat con n8n</h2>
-    <div id="messages"></div>
-    <input type="text" id="chatInput" placeholder="Escribe tu pregunta..." size="50" />
-    <button onclick="sendMessage()">Enviar</button>
-  </div>
 
-  <script>
-    // Tu endpoint de n8n:
-    const N8N_CHAT_URL = "https://primary-n4qy-production.up.railway.app/webhook/28d356f9-c512-458b-8f96-fd8636f75b46/chat";
+    <div id="chatContainer">
+        <h2>CIAS COM</h2>
+        <div id="messages"></div>
+        <input type="text" id="chatInput" placeholder="Escribe tu pregunta..." />
+        <button onclick="sendMessage()">Enviar</button>
+    </div>
 
-    async function sendMessage() {
-      const userInput = document.getElementById('chatInput').value.trim();
-      if (!userInput) return;  // Evita enviar vacío
+    <script>
+        const WEBHOOK_URL = "https://primary-n4qy-production.up.railway.app/webhook/28d356f9-c512-458b-8f96-fd8636f75b46/chat";
 
-      // Muestra el mensaje del usuario en el chat
-      addMessage("Tú", userInput, "user");
+        async function sendMessage() {
+            const userInput = document.getElementById('chatInput').value.trim();
+            if (!userInput) return;  // Evita enviar mensajes vacíos
 
-      // Resetea el input
-      document.getElementById('chatInput').value = "";
+            // Muestra el mensaje del usuario en el chat
+            addMessage("Tú", userInput, "user");
 
-      try {
-        // Llamada al webhook de n8n
-        const response = await fetch(N8N_CHAT_URL, {
-          method: "POST",
-          headers: { "Content-Type": "application/json" },
-          body: JSON.stringify({ 
-            // Ajusta la clave según cómo tu webhook lea el JSON
-            chatInput: userInput
-          })
-        });
+            // Limpia el input
+            document.getElementById('chatInput').value = "";
 
-        // Si devuelves JSON desde n8n, parsea aquí hhh
-        const data = await response.json();
+            try {
+                // Envía el mensaje al webhook de n8n
+                const response = await fetch(WEBHOOK_URL, {
+                    method: "POST",
+                    headers: { "Content-Type": "application/json" },
+                    body: JSON.stringify({ chatInput: userInput }) // Ajusta según la estructura de n8n
+                });
 
-        // Según la estructura de la respuesta
-        // Ajusta "data" para extraer el texto de respuesta
-        // Por ejemplo, si n8n responde { "answer": "...respuesta..." }
-        // usas data.answer
-        // Aquí asumo data contiene la respuesta en la propiedad "answer"
-        const botMessage = data.answer || JSON.stringify(data);
+                const data = await response.json();
+                const botMessage = data.answer || "No hay respuesta disponible"; // Ajusta según la respuesta de n8n
 
-        // Muestra la respuesta en el chat
-        addMessage("Bot", botMessage, "bot");
+                // Muestra la respuesta en el chat
+                addMessage("Bot", botMessage, "bot");
 
-      } catch (err) {
-        console.error(err);
-        addMessage("Bot", "Error al conectar con n8n", "bot");
-      }
-    }
+            } catch (err) {
+                console.error("Error al conectar con el webhook", err);
+                addMessage("Bot", "Hubo un problema al obtener respuesta", "bot");
+            }
+        }
 
-    // Función para añadir un mensaje al DIV de mensajes
-    function addMessage(author, text, cssClass) {
-      const msgContainer = document.getElementById("messages");
-      const div = document.createElement("div");
-      div.className = "msg";
-      div.innerHTML = `<span class="${cssClass}">${author}:</span> ${text}`;
-      msgContainer.appendChild(div);
-      // Haz scroll al final
-      msgContainer.scrollTop = msgContainer.scrollHeight;
-    }
-  </script>
+        function addMessage(author, text, cssClass) {
+            const msgContainer = document.getElementById("messages");
+            const div = document.createElement("div");
+            div.className = `msg ${cssClass}`;
+            div.innerHTML = `<strong>${author}:</strong> ${text}`;
+            msgContainer.appendChild(div);
+            msgContainer.scrollTop = msgContainer.scrollHeight; // Auto-scroll hacia abajo
+        }
+    </script>
+
 </body>
 </html>
