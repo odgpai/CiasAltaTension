@@ -1,0 +1,80 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <meta charset="utf-8" />
+  <title>Mi Chat con n8n</title>
+  <style>
+    /* Estilos muy básicos */
+    body { font-family: Arial, sans-serif; margin: 20px; }
+    #chatContainer { max-width: 600px; margin: 0 auto; }
+    #messages { border: 1px solid #ccc; padding: 10px; height: 300px; overflow-y: scroll; }
+    .msg { margin-bottom: 8px; }
+    .user { font-weight: bold; color: #0084ff; }
+    .bot { font-weight: bold; color: #f23c50; }
+  </style>
+</head>
+<body>
+  <div id="chatContainer">
+    <h2>Chat con n8n</h2>
+    <div id="messages"></div>
+    <input type="text" id="chatInput" placeholder="Escribe tu pregunta..." size="50" />
+    <button onclick="sendMessage()">Enviar</button>
+  </div>
+
+  <script>
+    // Tu endpoint de n8n:
+    const N8N_CHAT_URL = "https://primary-n4qy-production.up.railway.app/webhook/28d356f9-c512-458b-8f96-fd8636f75b46/chat";
+
+    async function sendMessage() {
+      const userInput = document.getElementById('chatInput').value.trim();
+      if (!userInput) return;  // Evita enviar vacío
+
+      // Muestra el mensaje del usuario en el chat
+      addMessage("Tú", userInput, "user");
+
+      // Resetea el input
+      document.getElementById('chatInput').value = "";
+
+      try {
+        // Llamada al webhook de n8n
+        const response = await fetch(N8N_CHAT_URL, {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({ 
+            // Ajusta la clave según cómo tu webhook lea el JSON
+            chatInput: userInput
+          })
+        });
+
+        // Si devuelves JSON desde n8n, parsea aquí
+        const data = await response.json();
+
+        // Según la estructura de la respuesta
+        // Ajusta "data" para extraer el texto de respuesta
+        // Por ejemplo, si n8n responde { "answer": "...respuesta..." }
+        // usas data.answer
+        // Aquí asumo data contiene la respuesta en la propiedad "answer"
+        const botMessage = data.answer || JSON.stringify(data);
+
+        // Muestra la respuesta en el chat
+        addMessage("Bot", botMessage, "bot");
+
+      } catch (err) {
+        console.error(err);
+        addMessage("Bot", "Error al conectar con n8n", "bot");
+      }
+    }
+
+    // Función para añadir un mensaje al DIV de mensajes
+    function addMessage(author, text, cssClass) {
+      const msgContainer = document.getElementById("messages");
+      const div = document.createElement("div");
+      div.className = "msg";
+      div.innerHTML = `<span class="${cssClass}">${author}:</span> ${text}`;
+      msgContainer.appendChild(div);
+      // Haz scroll al final
+      msgContainer.scrollTop = msgContainer.scrollHeight;
+    }
+  </script>
+</body>
+</html>
